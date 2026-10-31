@@ -1,4 +1,4 @@
-# koppula jashwanth reddy
+# koppula jashwanth Reddy
 **section:** CSE (Gen.AI)
 # Backend Labs
 
