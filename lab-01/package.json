@@ -1,0 +1,16 @@
+{
+  "name": "lab-01-node-express-server",
+  "version": "1.0.0",
+  "description": "Lab 1: Node.js and Express server (Backend Development Fundamentals)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:http": "node http-server.js"
+  },
+  "keywords": [],
+  "author": "YOUR NAME",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
