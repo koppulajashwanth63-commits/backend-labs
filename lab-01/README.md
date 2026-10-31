@@ -1,6 +1,6 @@
 # Lab 1: Node.js and Express server
 
-**Name:** YOUR NAME · **Registration number:** YOUR REG NO · **Section:** YOUR SECTION
+**Name:** K.Jashwanth reddy · **Registration number:** 252U1R9072 · **Section:** CSE GEN-AI
 
 **Live link:** PASTE PUBLIC URL HERE (or explain why it could not be deployed and add Postman screenshots)
 
