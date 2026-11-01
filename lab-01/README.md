@@ -2,7 +2,7 @@
 
 **Name:** K.Jashwanth reddy · **Registration number:** 252U1R9072 · **Section:** CSE GEN-AI
 
-**Live link:** PASTE PUBLIC URL HERE (or explain why it could not be deployed and add Postman screenshots)
+**Live link:** https://backend-labs-c6fd.onrender.com
 
 ## How to run
 
