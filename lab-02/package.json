@@ -1,0 +1,18 @@
+{
+  "name": "lab-02-sqlite-crud",
+  "version": "1.0.0",
+  "description": "Lab 2: SQLite database and CRUD routes (Express + SQLite)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
