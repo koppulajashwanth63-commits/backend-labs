@@ -1,0 +1,9 @@
+node_modules/
+.env
+*.log
+.DS_Store
+
+# SQLite database is generated from schema.sql, never commit it
+*.db
+*.db-journal
+*.db-wal

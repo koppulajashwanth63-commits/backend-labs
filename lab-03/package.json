@@ -1,0 +1,27 @@
+{
+  "name": "lab-03-rest-api-query-validation",
+  "version": "1.0.0",
+  "description": "Lab 3: REST API with search, sorting, filters, validation and debugging (Express + SQLite)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "db:reset": "node scripts/reset-db.js",
+    "test:postman": "newman run postman/Lab-03.postman_collection.json -e postman/Lab-03.postman_environment.json --reporters cli"
+  },
+  "keywords": [],
+  "author": "Koppula Jashwanth Reddy",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "newman": "^6.2.1",
+    "nodemon": "^3.1.0"
+  }
+}
