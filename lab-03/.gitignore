@@ -1,9 +1,14 @@
 node_modules/
 .env
+.env.local
 *.log
 .DS_Store
+.vercel
 
-# SQLite database is generated from schema.sql, never commit it
+# SQLite side files are never committed; book.db itself is generated on first run
 *.db
 *.db-journal
 *.db-wal
+*.db-shm
+
+.vercel

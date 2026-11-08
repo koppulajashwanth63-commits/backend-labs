@@ -7,7 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "db:reset": "node scripts/reset-db.js",
-    "test:postman": "newman run postman/Lab-03.postman_collection.json -e postman/Lab-03.postman_environment.json --reporters cli"
+    "test:postman": "node scripts/test-api.js"
   },
   "keywords": [],
   "author": "Koppula Jashwanth Reddy",

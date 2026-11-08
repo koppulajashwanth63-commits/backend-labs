@@ -80,6 +80,20 @@ const createApp = (db) => {
   app.set("json spaces", 2);
   app.use(express.json());
 
+  // Root route: quick description of the API, useful when the live link is opened.
+  app.get("/", (request, response) => {
+    response.status(200).json({
+      message: "Book Store API is running",
+      endpoints: [
+        "GET /books/",
+        "GET /books/:bookId/",
+        "POST /books/",
+        "PUT /books/:bookId/",
+        "DELETE /books/:bookId/",
+      ],
+    });
+  });
+
   // 1. GET /books/ - list with search, sorting, price range and pagination
   app.get(
     "/books/",

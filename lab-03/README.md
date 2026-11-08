@@ -2,39 +2,60 @@
 
 **Koppula Jashwanth Reddy** · Registration number **252U1R9072** · Section **CSE (GEN.AI)**
 
-**Live link:** Not deployed. The Render service for this repository hosts Lab 1, and this lab writes to a local SQLite file, so it is run locally. Every endpoint, including the failure cases, is shown in the [screenshots](#screenshots) below.
+**Live link:** https://bdf-lab-03-jashwanth.vercel.app/
 
 Course: Backend Development Fundamentals — Year II Term II — Aurora
+Faculty: Joel Prashanth D
+
+> The live server stores its database in `/tmp`, the only writable folder on Vercel. Creating, updating and deleting books works, but the data returns to the 10 starting rows when the server restarts.
 
 ## Objective
 
-Turn the Lab 2 CRUD routes into a clean REST API: plural nouns in the paths, HTTP methods for the actions, search / sort / filter / pagination on `GET /books/`, strict validation of the request body, one JSON error shape, and the correct status code for every case. The lab also covers debugging the four common faults (port conflict, wrong import path, table-name typo, missing `await`).
+Turn the Lab 2 CRUD routes into a clean REST API: nouns in the paths, HTTP methods for the actions, search, sorting, pagination and price filters in `GET /books/`, strict validation of input, the correct status code for every case, and one consistent JSON shape for every response.
 
 ## Technologies used
 
 - Node.js (v18 or later)
-- Express 4
-- SQLite through the `sqlite` and `sqlite3` packages
+- Express.js 4
+- SQLite (`sqlite` and `sqlite3` packages)
 - nodemon (development only)
-- Postman / newman (the same collection is used for both)
+- newman (runs the Postman collection from the CLI)
 
 ## Project structure
 
 ```text
 lab-03/
-├── app.js                       # Express app: routes, validation, error handler
-├── db.js                        # opens book.db (shared by index.js and the scripts)
-├── index.js                     # entry point: opens the DB, starts the server, graceful shutdown
-├── schema.sql                   # book table + 10 seed rows
+├── api/
+│   └── index.js                  # Vercel entry point (imports the Express app)
 ├── scripts/
-│   └── reset-db.js              # npm run db:reset — rebuilds book.db from schema.sql
-├── postman/
-│   ├── Lab-03.postman_collection.json
-│   └── Lab-03.postman_environment.json
-├── screenshots/                 # proof of every success and failure case
-├── .env.example
-├── .gitignore                   # node_modules, .env, *.db
+│   └── reset-db.js               # npm run db:reset — rebuilds book.db from schema.sql
+├── screenshots/
+│   ├── bad-query-param.png
+│   ├── db-after.png
+│   ├── db-before.png
+│   ├── delete.png
+│   ├── errors-404.png
+│   ├── get-all.png
+│   ├── get-one.png
+│   ├── invalid-id.png
+│   ├── newman-cli.png
+│   ├── post-bad-price.png
+│   ├── post-missing-author.png
+│   ├── post.png
+│   ├── put.png
+│   ├── query-filter-sort.png
+│   ├── query-pagination.png
+│   ├── query-price-filter.png
+│   └── query-search.png
+├── .gitignore
+├── app.js                        # Express app: routes, validation, error handler
+├── db.js                         # opens book.db and creates the schema on first run
+├── index.js                      # local entry point (starts the HTTP server)
 ├── package.json
+├── package-lock.json
+├── postman_collection.json       # 14 success and failure requests
+├── schema.sql                    # table definition and the 10 starting rows
+├── vercel.json                   # sends all requests to api/index.js
 └── README.md
 ```
 
@@ -44,10 +65,9 @@ Open a terminal in this `lab-03` folder:
 
 ```bash
 npm install
-npm start            # or: npm run dev  (nodemon)
+npm run dev          # nodemon, restarts on every change
+# or: npm start      # plain node
 ```
-
-On the first run the server creates `book.db` from `schema.sql` (10 seed rows), so there is no separate setup step.
 
 The terminal prints:
 
@@ -55,228 +75,238 @@ The terminal prints:
 Lab 3 API running at http://localhost:3000/books/
 ```
 
+Open <http://localhost:3000/> to see the list of endpoints.
+
+### Database
+
+`book.db` is generated, not committed. `db.js` creates it from `schema.sql` on the first start, so there is no separate setup step. To rebuild it with the 10 starting rows at any time:
+
+```bash
+npm run db:reset
+```
+
+Inspect the same rows the API returns:
+
+```bash
+sqlite3 book.db "SELECT * FROM book;"
+```
+
 ### Environment variables
 
-| Variable | Required | Default | Description |
-| --- | --- | --- | --- |
-| `PORT` | No | `3000` | Port the HTTP server listens on. |
-| `DB_FILE` | No | `./book.db` | Path to the SQLite database file. Handy for a throwaway test database. |
+| Variable | Required | Description |
+|---|---|---|
+| `PORT` | No | Port the server listens on. Falls back to `3000` when it is not set. |
+| `DB_FILE` | No | Path to the SQLite file. Defaults to `./book.db`. |
 
-No passwords or API keys are used in this lab. The app reads real environment variables; there is no dotenv loader, so on Windows PowerShell set them for the session before starting:
+No database password, API key or `.env` file is used in this lab. The app reads real environment variables (there is no dotenv loader), so on Windows PowerShell set them for the session:
 
 ```powershell
 $env:PORT = 3001
 npm start
 ```
 
-`.env.example` documents the two variables and contains no real values (`.env` is git-ignored).
-
-## Database
-
-`book.db` is generated, not committed (see `.gitignore`). It is created from `schema.sql` automatically on the first start, or when `DB_FILE` points at an empty file. Rebuild it with the seed rows at any time with:
-
-```bash
-npm run db:reset
-```
-
-Table:
-
-```sql
-CREATE TABLE book (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  author TEXT NOT NULL,
-  price INTEGER NOT NULL,
-  pages INTEGER NOT NULL
-);
-```
-
-It is seeded with 10 books. Inspect the same rows the API returns with:
-
-```bash
-sqlite3 book.db "SELECT * FROM book;"
-```
-
 ## Endpoints
 
-| Method | Path | Description | Success |
-| --- | --- | --- | --- |
-| GET | `/books/` | List books with search, price filter, sorting and pagination. | 200 |
-| GET | `/books/:bookId/` | Return one book by id. | 200 |
-| POST | `/books/` | Create a book from a JSON body. | 201 |
-| PUT | `/books/:bookId/` | Replace all fields of an existing book. | 200 |
-| DELETE | `/books/:bookId/` | Delete a book. | 200 |
+| Method | Path | Description |
+|---|---|---|
+| GET | `/` | Lists the available endpoints. |
+| GET | `/books/` | Returns books, with optional search, filter, sort and pagination. |
+| GET | `/books/:bookId/` | Returns one book by id. |
+| POST | `/books/` | Creates a book and returns 201 with the new id. |
+| PUT | `/books/:bookId/` | Replaces the details of an existing book. |
+| DELETE | `/books/:bookId/` | Deletes a book. |
 
-Every error uses the same shape, for example `{ "message": "Book with id 99 not found" }`. A list response also sends `X-Total-Count` with the number of rows matching the filters (before `limit`/`offset`), which is useful for pagination.
+A list response also sends `X-Total-Count` with the number of rows matching the filters (before `limit`/`offset`), which is useful for pagination.
 
-### Query parameters for `GET /books/`
+## Query parameters for `GET /books/`
 
-| Parameter | Default | Validation | Description |
-| --- | --- | --- | --- |
-| `search_q` | empty | any text | Partial, case-insensitive match on `title` with `LIKE`. |
-| `order_by` | `id` | `id`, `title`, `author`, `price`, `pages` | Column used for sorting. |
-| `order` | `ASC` | `ASC` or `DESC` | Sort direction. |
-| `limit` | `10` | integer 1–100 | Maximum rows returned. |
-| `offset` | `0` | integer ≥ 0 | Rows skipped, used with `limit` for pages. |
-| `min_price` | none | integer ≥ 0 | Lower bound of the price range. |
-| `max_price` | none | integer ≥ 0 | Upper bound of the price range. |
+| Parameter | Default | Description |
+|---|---|---|
+| `search_q` | empty | Partial, case-insensitive match on the title using `LIKE`. |
+| `order_by` | `id` | Column to sort by: `id`, `title`, `author`, `price` or `pages`. |
+| `order` | `ASC` | Sort direction: `ASC` or `DESC`. |
+| `limit` | `10` | Maximum number of rows returned (1–100). |
+| `offset` | `0` | Number of rows skipped, used with `limit` for pages. |
+| `min_price` | none | Smallest price to include (integer). |
+| `max_price` | none | Largest price to include (integer). |
 
 Examples:
 
 ```text
-/books/?search_q=clean
-/books/?min_price=300&max_price=500&order_by=price&order=DESC
-/books/?limit=5&offset=5
+/books/?search_q=habit
+/books/?min_price=300&max_price=400&order_by=price&order=DESC
+/books/?limit=2&offset=8
 ```
 
-`order_by` is checked against a fixed list, because a column name cannot be bound as a `?` placeholder. Every user value is still sent to SQLite as a bound parameter; SQL is never built by joining input into the string.
+`order_by` is checked against a fixed list of column names, because a column name cannot be passed as a `?` placeholder. Every value that comes from the user is still sent as a placeholder, never joined into the SQL string.
 
-### Status codes and error messages
+## Status codes and error messages
+
+Every error uses the same shape: `{ "message": "..." }`.
 
 | Case | Status | Example message |
-| --- | --- | --- |
-| Book created | 201 | `Book created` + `bookId` |
-| Book updated / deleted | 200 | `Book updated` / `Book deleted` |
-| `bookId` is not a number | 400 | `bookId must be a number` |
-| `title` missing or empty | 400 | `title is required and must be a non-empty string` |
-| `author` missing or empty | 400 | `author is required and must be a non-empty string` |
+|---|---|---|
+| Invalid `bookId` (not a number) | 400 | `bookId must be a number` |
+| Missing or empty `title` | 400 | `title is required and must be a non-empty string` |
+| Missing or empty `author` | 400 | `author is required and must be a non-empty string` |
 | `price` not a positive whole number | 400 | `price must be a positive integer` |
-| `pages` not a positive whole number | 400 | `pages must be a positive integer` |
-| Bad `order_by`, `order`, `limit`, `offset`, `min_price`, `max_price` | 400 | `order must be ASC or DESC` |
+| `pages` missing, zero, negative or decimal | 400 | `pages must be a positive integer` |
+| Bad `order_by`, `order`, `limit`, `offset`, `min_price` or `max_price` | 400 | `order must be ASC or DESC` |
 | `min_price` greater than `max_price` | 400 | `min_price cannot be greater than max_price` |
 | Body is not valid JSON | 400 | `Invalid JSON body` |
 | Book does not exist | 404 | `Book with id 999 not found` |
 | Unknown route | 404 | `Route not found: GET /nope` |
-| Anything unexpected | 500 | `Internal server error` |
+| Successful create | 201 | `Book created` + `bookId` |
+| Successful update or delete | 200 | `Book updated` / `Book deleted` |
 
 ## Debugging exercise
 
 The four faults from the broken version handed out for this lab, and the fix present in this project:
 
 | Symptom | Cause | Fix in this project |
-| --- | --- | --- |
+|---|---|---|
 | `Error: listen EADDRINUSE :::3000` on start | Another process was already holding port 3000 (during this lab, an older server from another folder was still running). | Stop the other process, or start with `PORT=3001 npm start`. `index.js` reads `process.env.PORT` and prints a clear message instead of crashing. |
-| `Error: Cannot find module './routes/books'` | The import path did not match the file layout. | The entry file imports `./db` and `./app`, which are the files that actually exist. |
+| `Error: Cannot find module './routes/books'` | The import path did not match the file layout. | `index.js` imports `./db` and `./app`, and `api/index.js` imports `../db` and `../app` — the files that actually exist. |
 | `SQLITE_ERROR: no such table: books` | The query used `books` while the table is created as `book`. | Every query uses the same `book` table name as `schema.sql`. |
-| Response body is empty or `undefined` | The database call was used without `await`. | Every `db.all()`, `db.get()` and `db.run()` call is awaited before its result is used. |
+| Response body is empty or `undefined` in the handler | The database call was used without `await`. | Every `db.all()`, `db.get()` and `db.run()` call is awaited before its result is used. |
 
 Two more problems hit while building this lab:
 
 - `EBUSY: resource busy or locked` when running `npm run db:reset` — a server process still had `book.db` open. Stop the server first, then reset.
 - A decimal `price` such as `10.5` was accepted while the column is `INTEGER` and `min_price` rejected decimals. Validation now requires a positive integer for `price`, so the API and the schema agree.
 
-## Testing with Postman / newman
+## Testing
 
-Import `postman/Lab-03.postman_collection.json` and `postman/Lab-03.postman_environment.json` into Postman, start the server, and run the requests top to bottom. The collection saves the new id as `{{newBookId}}` after `POST`, so `PUT` and `DELETE` act on the book that was just created.
-
-The same collection runs from the command line with newman (installed as a dev dependency):
+All 14 cases are in `postman_collection.json`: import it into Postman and press Send on each request, or run the whole list from the terminal:
 
 ```bash
-npm start                          # terminal 1
-npm run test:postman               # terminal 2
+npm run test:postman
 ```
 
-Result of the last run: **25 requests, 48 assertions, 0 failures.**
+That command starts the API on port 3100 with a throwaway database, runs all 14 requests with newman, then stops the server and deletes the database. Your `book.db` and port 3000 are not touched.
+
+Result of the last run: **14 requests, 29 assertions, 0 failures.**
 
 | # | Request | Expected |
-| --- | --- | --- |
-| 1 | `GET /books/` | 200, 10 rows, `X-Total-Count: 10` |
-| 2 | `GET /books/?search_q=clean` | 200, titles contain "clean" |
-| 3 | `GET /books/?order_by=price&order=DESC&limit=3` | 200, 3 most expensive first |
-| 4 | `GET /books/?min_price=300&max_price=500` | 200, every price inside the range |
-| 5 | `GET /books/?limit=5&offset=5` | 200, second page of 5 |
-| 6 | `GET /books/1/` | 200, one book |
-| 7 | `POST /books/` valid body | 201, `{ message, bookId }` |
-| 8 | `GET /books/{{newBookId}}/` | 200, the created book |
-| 9 | `PUT /books/{{newBookId}}/` | 200, `Book updated` |
-| 10 | `GET /books/{{newBookId}}/` | 200, all fields replaced |
-| 11 | `DELETE /books/{{newBookId}}/` | 200, `Book deleted` |
-| 12 | `GET /books/{{newBookId}}/` | 404 after delete |
-| 13 | `GET /books/999999/` | 404 |
-| 14 | `GET /books/abc/` | 400, `bookId must be a number` |
-| 15 | `POST /books/` without `title` | 400, message names `title` |
-| 16 | `POST /books/` with `"price": "five hundred"` | 400, message names `price` |
-| 17 | `POST /books/` with `{}` | 400 |
-| 18 | `PUT /books/999999/` valid body | 404 |
-| 19 | `DELETE /books/999999/` | 404 |
-| 20 | `GET /books/?order_by=password` | 400, message lists allowed columns |
-| 21 | `GET /books/?order=sideways` | 400, `order must be ASC or DESC` |
-| 22 | `GET /books/?limit=1000` | 400, maximum is 100 |
-| 23 | `GET /books/?min_price=900&max_price=100` | 400, range problem |
-| 24 | `GET /nope` | 404, route-not-found JSON |
-| 25 | `POST /books/` with malformed JSON | 400, `Invalid JSON body` |
+|---|---|---|
+| 01 | `GET /books/` | 200, 10 books, `X-Total-Count: 10` |
+| 02 | `GET /books/?search_q=habit` | 200, only titles containing "habit" |
+| 03 | `GET /books/?min_price=300&max_price=400` | 200, every price in the range |
+| 04 | `GET /books/?order_by=price&order=DESC&limit=3` | 200, three most expensive first |
+| 05 | `GET /books/?limit=2&offset=8` | 200, the last two rows |
+| 06 | `GET /books/1/` | 200, one book |
+| 07 | `POST /books/` valid body | 201, new id |
+| 08 | `POST /books/` without `author` | 400, message names `author` |
+| 09 | `POST /books/` with `"price": "free"` | 400, message names `price` |
+| 10 | `PUT /books/1/` valid body | 200, updated |
+| 11 | `DELETE /books/10/` | 200, deleted |
+| 12 | `GET /books/999/` | 404, `Book with id 999 not found` |
+| 13 | `GET /books/abc/` | 400, `bookId must be a number` |
+| 14 | `GET /books/?order_by=price;DROP%20TABLE%20book` | 400, `order_by must be one of ...` |
 
 ## Screenshots
 
-Each image below is a real request/response from the server running at `http://localhost:3000`, using the requests in the Postman collection. The full CLI run is shown last.
+Every request below was sent to the running server using the requests in `postman_collection.json`. The last image is the full CLI run.
 
-### `GET /books/` — default query
+### Database before testing
 
-Returns the first 10 books with status 200 and `X-Total-Count: 10`.
+Table structure and the 10 starting rows, read with the SQLite CLI.
 
-![GET all books](screenshots/query-all.png)
+![Database before testing](screenshots/db-before.png)
 
-### Search — `?search_q=clean`
+### GET /books/ — default query
 
-Partial title match with `LIKE`; only titles containing "clean" are returned.
+Returns the first 10 books with status 200.
+
+![GET all books](screenshots/get-all.png)
+
+### Search — `?search_q=habit`
+
+Partial title match with `LIKE`; only titles containing "habit" come back.
 
 ![Search by title](screenshots/query-search.png)
+
+### Price filter — `?min_price=300&max_price=400`
+
+Returns only books priced between 300 and 400.
+
+![Price filter](screenshots/query-price-filter.png)
 
 ### Sort — `?order_by=price&order=DESC&limit=3`
 
 The three most expensive books, highest first.
 
-![Sort by price](screenshots/query-sort.png)
+![Sort by price](screenshots/query-filter-sort.png)
 
-### Price filter — `?min_price=300&max_price=500`
+### Pagination — `?limit=2&offset=8`
 
-Only books inside the price range are returned.
-
-![Price range filter](screenshots/query-price-range.png)
-
-### Pagination — `?limit=5&offset=5`
-
-Skips the first five rows and returns the next five.
+Skips the first eight rows and returns two.
 
 ![Pagination](screenshots/query-pagination.png)
 
-### `GET /books/1/` — one book
+### GET /books/1/ — one book
+
+Returns a single book with status 200.
 
 ![GET one book](screenshots/get-one.png)
 
-### `POST /books/` — create (201)
+### POST /books/ — create
 
-Request body and the 201 response with the new `bookId`.
+Request body and the 201 response with the new book id.
 
-![POST create](screenshots/post.png)
+![POST add book](screenshots/post.png)
 
-### `PUT /books/1/` — update (200)
+### POST /books/ — missing author
 
-![PUT update](screenshots/put.png)
+Returns 400 with a message naming the missing field.
 
-### `DELETE /books/:bookId/` — delete (200)
+![POST missing author](screenshots/post-missing-author.png)
+
+### POST /books/ — price is not a number
+
+A string in `price` is rejected with 400.
+
+![POST bad price](screenshots/post-bad-price.png)
+
+### PUT /books/1/ — update
+
+Request body and the 200 response after replacing the fields.
+
+![PUT update book](screenshots/put.png)
+
+### DELETE /books/10/ — delete
+
+Returns 200 after removing the row.
 
 ![DELETE book](screenshots/delete.png)
 
-### Failure case — non-numeric price (400)
+### GET /books/abc/ — invalid id
 
-A string in `price` is rejected with 400 and a clear message.
+A non-numeric id returns 400, not 404.
 
-![400 bad price](screenshots/error-400.png)
+![Invalid id](screenshots/invalid-id.png)
 
-### Failure case — missing book (404)
+### GET /books/ — bad query parameter
 
-![404 not found](screenshots/error-404.png)
+An `order_by` value that is not a column name returns 400.
 
-### Database after the requests
+![Bad query parameter](screenshots/bad-query-param.png)
 
-`sqlite3 book.db "SELECT * FROM book;"` shows the seed rows plus the book created with `POST`.
+### GET /books/999/ — not found
 
-![SQLite view](screenshots/db-cli.png)
+A missing book returns 404 with the same JSON shape.
+
+![Not found](screenshots/errors-404.png)
+
+### Database after testing
+
+Row 1 is updated, row 10 is deleted and the book created with POST has id 11.
+
+![Database after testing](screenshots/db-after.png)
 
 ### Full Postman collection run in the CLI
 
-`npm run test:postman` (newman) — 25 requests, 48 assertions, 0 failures.
+`npm run test:postman` (newman) — 14 requests, 29 assertions, 0 failures.
 
 ![newman CLI run](screenshots/newman-cli.png)
 
