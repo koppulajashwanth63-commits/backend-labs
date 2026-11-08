@@ -8,7 +8,7 @@
     "start:http": "node http-server.js"
   },
   "keywords": [],
-  "author": "YOUR NAME",
+  "author": "Koppula Jashwanth Reddy",
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2"

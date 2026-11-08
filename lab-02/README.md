@@ -1,8 +1,8 @@
 # Lab 2: SQLite database and CRUD routes
 
-**Name:** YOUR NAME · **Registration number:** YOUR REG NO · **Section:** YOUR SECTION
+**Name:** Koppula Jashwanth Reddy · **Registration number:** 252U1R9072 · **Section:** CSE (GEN.AI)
 
-**Live link:** PASTE PUBLIC URL HERE (or: "Not deployed because ..." and rely on the Postman screenshots below)
+**Live link:** Not deployed. The Render service for this repository hosts Lab 1; this lab runs locally with SQLite. Postman screenshots for every endpoint are below.
 
 ## Objective
 
@@ -63,7 +63,7 @@ Add your Postman and database screenshots in `screenshots/` and reference them l
 ![POST add book](screenshots/post.png)
 ![PUT update book](screenshots/put.png)
 ![DELETE book](screenshots/delete.png)
-![Error case: 404](screenshots/error-404.png)
+![Error case: 404](screenshots/error.png)
 ![SQLite CLI after changes](screenshots/db-cli.png)
 
 ## Notes: problems faced and how I solved them
