@@ -44,9 +44,10 @@ Open a terminal in this `lab-03` folder:
 
 ```bash
 npm install
-npm run db:reset     # creates book.db from schema.sql (10 seed rows)
 npm start            # or: npm run dev  (nodemon)
 ```
+
+On the first run the server creates `book.db` from `schema.sql` (10 seed rows), so there is no separate setup step.
 
 The terminal prints:
 
@@ -72,7 +73,7 @@ npm start
 
 ## Database
 
-`book.db` is generated, not committed (see `.gitignore`). Rebuild it at any time with:
+`book.db` is generated, not committed (see `.gitignore`). It is created from `schema.sql` automatically on the first start, or when `DB_FILE` points at an empty file. Rebuild it with the seed rows at any time with:
 
 ```bash
 npm run db:reset
